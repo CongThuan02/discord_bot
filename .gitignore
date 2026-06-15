@@ -1,0 +1,14 @@
+.env
+__pycache__/
+*.pyc
+.venv/
+.venv312/
+venv/
+.DS_Store
+
+# Video nguồn nặng
+*.mp4
+
+# File âm thanh upload và config user
+sounds/
+sounds_config.json
