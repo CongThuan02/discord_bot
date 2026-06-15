@@ -54,3 +54,4 @@ là bot đã chạy. Vào Discord test `!setjoin` kèm file để kiểm tra.
 - **Âm thanh user upload** lưu vào volume tại `/data/sounds/`, tách khỏi code.
 - Railway free tier có giới hạn dùng ~$5 credit/tháng. Bot nhỏ thường đủ; nếu hết, bot sẽ dừng cho tới chu kỳ sau hoặc khi nâng cấp.
 - Bot dùng **gateway/voice connection** liên tục — KHÔNG deploy được lên nền tảng serverless (Vercel/Lambda).
+- Encode Opus dùng `opusscript` (pure JavaScript) thay vì `@discordjs/opus` (native) — để Railway **không cần biên dịch** native module (không cần Python/node-gyp). Node version được pin ở `22.x` (xem `package.json` + `.nvmrc`).

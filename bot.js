@@ -230,7 +230,9 @@ function downloadAttachment(url, dest) {
 
 // ---------- Sự kiện ----------
 
-client.once('ready', () => {
+// 'clientReady' là tên mới (discord.js v15); fallback 'ready' cho bản cũ hơn.
+const READY_EVENT = 'clientReady';
+client.once(READY_EVENT, () => {
   console.log(`Bot đã online: ${client.user.tag} (id=${client.user.id})`);
 });
 
