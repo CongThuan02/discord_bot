@@ -29,6 +29,7 @@ try {
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
+const crypto = require('crypto');
 const {
   Client,
   GatewayIntentBits,
@@ -52,10 +53,13 @@ const TOKEN = process.env.DISCORD_TOKEN;
 const DATA_DIR = process.env.DATA_DIR || '.';
 const SOUNDS_DIR = path.join(DATA_DIR, 'sounds');
 const CONFIG_FILE = path.join(DATA_DIR, 'sounds_config.json');
+const TTS_DIR = path.join(DATA_DIR, 'tts_cache'); // cache file giọng đọc tên
 
-// Âm thanh mặc định nằm SẴN trong repo (thư mục sounds/ của dự án), không phải volume.
+// Ngôn ngữ giọng đọc TTS (vi = tiếng Việt). Đổi sang 'en' nếu muốn giọng Anh.
+const TTS_LANG = process.env.TTS_LANG || 'vi';
+
+// Âm thanh mặc định khi VÀO, dùng cho user chưa tự cài (nằm sẵn trong repo).
 const DEFAULT_JOIN = path.join('sounds', '_default_join.mp3');
-const DEFAULT_LEAVE = path.join('sounds', '_default_leave.mp3');
 
 // Đuôi file âm thanh cho phép
 const ALLOWED_EXT = ['.mp3', '.wav', '.ogg', '.m4a', '.flac', '.webm'];
@@ -63,6 +67,7 @@ const MAX_SIZE = 8 * 1024 * 1024; // 8 MB
 const PREFIX = '!';
 
 fs.mkdirSync(SOUNDS_DIR, { recursive: true });
+fs.mkdirSync(TTS_DIR, { recursive: true });
 
 const client = new Client({
   intents: [
@@ -92,13 +97,12 @@ function saveConfig(cfg) {
   fs.writeFileSync(CONFIG_FILE, JSON.stringify(cfg, null, 2), 'utf-8');
 }
 
-// kind là 'join' hoặc 'leave'. Trả về đường dẫn file nếu có, fallback về mặc định.
+// Trả về âm thanh khi VÀO: riêng của user nếu có, không thì fallback âm mặc định.
 function getUserSound(userId, kind) {
   const cfg = loadConfig();
   const p = cfg[String(userId)]?.[kind];
   if (p && fs.existsSync(p)) return p;
-  const def = kind === 'join' ? DEFAULT_JOIN : DEFAULT_LEAVE;
-  if (def && fs.existsSync(def)) return def;
+  if (kind === 'join' && fs.existsSync(DEFAULT_JOIN)) return DEFAULT_JOIN;
   return null;
 }
 
@@ -125,7 +129,8 @@ function setUserSound(userId, kind, p) {
 
 // ---------- Phát âm thanh ----------
 
-// Join channel, phát file, rồi Ở LẠI. Tuần tự theo từng guild.
+// Join channel cần phát (di chuyển nếu đang ở channel khác), phát file, rồi Ở LẠI.
+// Tuần tự theo từng guild để không phát chồng.
 async function playSound(channel, soundPath) {
   const guildId = channel.guild.id;
 
@@ -147,12 +152,10 @@ async function doPlay(channel, soundPath) {
     connection.state.status !== VoiceConnectionStatus.Destroyed &&
     connection.state.status !== VoiceConnectionStatus.Disconnected;
 
-  if (alive) {
-    // Bot đã ngồi sẵn ở một channel còn sống → KHÔNG di chuyển.
-    // Chỉ phát nếu sự kiện xảy ra đúng channel bot đang ở.
-    if (connection.joinConfig.channelId !== channel.id) return;
-  } else {
-    if (connection) {
+  // Nếu chưa kết nối, HOẶC đang ở channel khác → (re)connect vào ĐÚNG channel
+  // có sự kiện. joinVoiceChannel với cùng guildId sẽ tự chuyển bot sang channel mới.
+  if (!alive || connection.joinConfig.channelId !== channel.id) {
+    if (connection && !alive) {
       try {
         connection.destroy();
       } catch {
@@ -200,8 +203,15 @@ async function doPlay(channel, soundPath) {
     });
   } finally {
     if (subscription) subscription.unsubscribe();
+    // Phát xong RỜI NGAY để sẵn sàng phục vụ channel khác.
+    // Lần sau có người vào/ra, bot sẽ tự được thêm vào channel đó để phát.
+    try {
+      player.stop();
+      connection.destroy();
+    } catch {
+      /* ignore */
+    }
   }
-  // Bot Ở LẠI trong channel, không tự rời. Dùng lệnh !leave để gọi bot ra.
 }
 
 // ---------- Tải file đính kèm ----------
@@ -228,6 +238,48 @@ function downloadAttachment(url, dest) {
   });
 }
 
+// ---------- Text-to-Speech (đọc tên) ----------
+
+// Tải file mp3 từ URL kèm User-Agent (Google TTS chặn request thiếu UA).
+function downloadUrl(url, dest) {
+  return new Promise((resolve, reject) => {
+    const file = fs.createWriteStream(dest);
+    https
+      .get(url, { headers: { 'User-Agent': 'Mozilla/5.0' } }, (res) => {
+        if (res.statusCode !== 200) {
+          file.close();
+          fs.unlink(dest, () => {});
+          reject(new Error(`HTTP ${res.statusCode}`));
+          return;
+        }
+        res.pipe(file);
+        file.on('finish', () => file.close(resolve));
+      })
+      .on('error', (err) => {
+        file.close();
+        fs.unlink(dest, () => {});
+        reject(err);
+      });
+  });
+}
+
+// Trả về đường dẫn file mp3 đọc `text`. Có cache theo nội dung để khỏi tải lại.
+async function getTtsFile(text) {
+  const clean = text.slice(0, 180); // endpoint giới hạn ~200 ký tự
+  const key = crypto
+    .createHash('md5')
+    .update(`${TTS_LANG}:${clean}`)
+    .digest('hex');
+  const dest = path.join(TTS_DIR, `${key}.mp3`);
+  if (fs.existsSync(dest)) return dest;
+
+  const url =
+    'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob' +
+    `&tl=${encodeURIComponent(TTS_LANG)}&q=${encodeURIComponent(clean)}`;
+  await downloadUrl(url, dest);
+  return dest;
+}
+
 // ---------- Sự kiện ----------
 
 // 'clientReady' là tên mới (discord.js v15); fallback 'ready' cho bản cũ hơn.
@@ -244,17 +296,28 @@ client.on('voiceStateUpdate', async (before, after) => {
     `🔔 voice update: ${member.displayName} | ${before.channel?.name} -> ${after.channel?.name}`,
   );
 
-  // User VÀO 1 channel (trước đó không ở channel nào, hoặc chuyển channel)
+  const name = member.displayName;
+
+  // User VÀO 1 channel → phát âm thanh mp3 (riêng của user, hoặc mặc định).
   if (after.channel && before.channelId !== after.channelId) {
     const sound = getUserSound(member.id, 'join');
     if (sound) await playSound(after.channel, sound);
   }
-  // User RỜI 1 channel (rời hẳn hoặc chuyển sang channel khác)
+  // User RỜI 1 channel → đọc tên bằng giọng nói "... đã cút".
   else if (before.channel && before.channelId !== after.channelId) {
-    const sound = getUserSound(member.id, 'leave');
-    if (sound) await playSound(before.channel, sound);
+    await speakName(before.channel, `${name} đã cút`);
   }
 });
+
+// Tạo file TTS đọc `text` rồi phát vào channel.
+async function speakName(channel, text) {
+  try {
+    const file = await getTtsFile(text);
+    await playSound(channel, file);
+  } catch (e) {
+    console.error(`❌ Không tạo được giọng đọc: ${e.message}`);
+  }
+}
 
 // ---------- Lệnh cấu hình ----------
 

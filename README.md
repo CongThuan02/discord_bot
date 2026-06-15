@@ -45,21 +45,23 @@ node bot.js
 # hoặc: npm start
 ```
 
-## 4. Cách dùng (trong Discord)
+## 4. Cách hoạt động
+
+Khi **bất kỳ ai** vào hoặc rời một voice channel, bot tự vào channel đó:
+- **Vào phòng** → phát **âm thanh mp3** của user (hoặc âm mặc định nếu chưa cài bằng `!setjoin`)
+- **Rời phòng** → **đọc tên** bằng giọng nói: *"TênABC đã cút"*
+
+Giọng đọc dùng **Google TTS miễn phí** (mặc định tiếng Việt). Đổi ngôn ngữ bằng biến môi trường `TTS_LANG` (vd `TTS_LANG=en` cho giọng Anh).
 
 | Lệnh | Mô tả |
 |------|-------|
-| `!setjoin` + đính kèm file | Đặt âm thanh khi **bạn vào** channel |
-| `!setleave` + đính kèm file | Đặt âm thanh khi **bạn rời** channel |
-| `!clearjoin` / `!clearleave` | Xoá âm thanh đã đặt |
-| `!mysounds` | Xem âm thanh hiện tại của bạn |
-| `!join` / `!leave` | Gọi bot vào / rời voice channel |
+| `!join` / `!leave` | Gọi bot vào / rời voice channel thủ công |
 
-> Bot **ở lại** trong channel sau khi phát, không tự rời. Dùng `!leave` để gọi bot ra.
+> Bot phát xong **tự rời ngay**. Mỗi lần có người vào/ra bất kỳ channel nào, bot tự vào channel đó đọc tên.
 
-- Mỗi user tự cấu hình âm thanh riêng.
-- Định dạng hỗ trợ: mp3, wav, ogg, m4a, flac, webm (tối đa 8 MB).
-- File lưu trong `sounds/`, mapping lưu trong `sounds_config.json`.
+- File giọng đọc được cache trong `tts_cache/` để khỏi tải lại.
+
+> 💡 Bot vẫn còn các lệnh upload mp3 riêng (`!setjoin`/`!setleave`/`!mysounds`/`!clearjoin`/`!clearleave`) nhưng hiện sự kiện vào/ra dùng **đọc tên** thay vì file mp3.
 
 ## Ghi chú
 

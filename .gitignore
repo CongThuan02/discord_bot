@@ -13,6 +13,7 @@ venv/
 # File âm thanh user upload + config (do user tạo lúc runtime) — bỏ qua tất cả...
 sounds/*
 sounds_config.json
+tts_cache/
 
 # ...NHƯNG vẫn giữ file âm thanh mặc định trong repo để deploy
 !sounds/_default_join.mp3
