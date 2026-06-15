@@ -20,7 +20,7 @@ cp .env.example .env
 # mở .env và dán token vào DISCORD_TOKEN
 ```
 
-Cần có **ffmpeg** trên máy (`brew install ffmpeg` trên macOS).
+> Không cần cài ffmpeg riêng — bot đã đi kèm `ffmpeg-static`.
 
 ## 3. Chạy (cách dễ nhất — chỉ cần ấn run)
 
@@ -32,15 +32,17 @@ Tùy hệ điều hành, **double-click** file tương ứng:
 | macOS | `run.command` |
 | Linux | `run.sh` (hoặc chạy `./run.sh` trong terminal) |
 
-Lần đầu chạy, script sẽ **tự cài thư viện**. Nếu chưa có file `.env`, script
-sẽ tự tạo và mở để bạn dán token vào `DISCORD_TOKEN`, lưu lại rồi chạy lại.
+Lần đầu chạy, script sẽ **tự cài thư viện** (`npm install`). Nếu chưa có file `.env`,
+script sẽ tự tạo và mở để bạn dán token vào `DISCORD_TOKEN`, lưu lại rồi chạy lại.
 
-> Yêu cầu cài sẵn: **Python 3** và **ffmpeg**. Nếu thiếu, script sẽ báo và hướng dẫn link tải.
+> Yêu cầu cài sẵn: **Node.js >= 18**. Nếu thiếu, script sẽ báo và hướng dẫn link tải.
 
 ### Chạy thủ công (nâng cao)
 
 ```bash
-.venv/bin/python bot.py
+npm install
+node bot.js
+# hoặc: npm start
 ```
 
 ## 4. Cách dùng (trong Discord)
@@ -51,6 +53,9 @@ sẽ tự tạo và mở để bạn dán token vào `DISCORD_TOKEN`, lưu lại
 | `!setleave` + đính kèm file | Đặt âm thanh khi **bạn rời** channel |
 | `!clearjoin` / `!clearleave` | Xoá âm thanh đã đặt |
 | `!mysounds` | Xem âm thanh hiện tại của bạn |
+| `!join` / `!leave` | Gọi bot vào / rời voice channel |
+
+> Bot **ở lại** trong channel sau khi phát, không tự rời. Dùng `!leave` để gọi bot ra.
 
 - Mỗi user tự cấu hình âm thanh riêng.
 - Định dạng hỗ trợ: mp3, wav, ogg, m4a, flac, webm (tối đa 8 MB).

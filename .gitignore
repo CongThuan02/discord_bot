@@ -1,4 +1,5 @@
 .env
+node_modules/
 __pycache__/
 *.pyc
 .venv/
@@ -9,6 +10,10 @@ venv/
 # Video nguồn nặng
 *.mp4
 
-# File âm thanh upload và config user
-sounds/
+# File âm thanh user upload + config (do user tạo lúc runtime) — bỏ qua tất cả...
+sounds/*
 sounds_config.json
+
+# ...NHƯNG vẫn giữ file âm thanh mặc định trong repo để deploy
+!sounds/_default_join.mp3
+!sounds/_default_leave.mp3

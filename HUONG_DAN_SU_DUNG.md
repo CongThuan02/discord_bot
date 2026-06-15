@@ -24,7 +24,7 @@ Mỗi người tự cài âm thanh riêng cho mình — không ai bị trùng.
 ### Bước 3 — Đặt âm thanh khi BẠN RỜI phòng
 Làm y hệt Bước 2, nhưng dùng lệnh `!setleave` kèm file.
 
-✅ Xong! Bây giờ thử **vào một phòng thoại** — bot sẽ chạy vào, phát âm thanh của bạn rồi tự rời đi.
+✅ Xong! Bây giờ thử **vào một phòng thoại** — bot sẽ chạy vào và phát âm thanh của bạn. Bot **ở lại** trong phòng; gõ `!leave` khi muốn bot rời đi.
 
 ---
 
@@ -37,6 +37,7 @@ Làm y hệt Bước 2, nhưng dùng lệnh `!setleave` kèm file.
 | `!clearjoin` | Xoá âm thanh khi vào |
 | `!clearleave` | Xoá âm thanh khi rời |
 | `!mysounds` | Xem âm thanh bạn đang dùng |
+| `!join` / `!leave` | Gọi bot vào / rời phòng thoại |
 
 ---
 
@@ -66,5 +67,5 @@ Làm y hệt Bước 2, nhưng dùng lệnh `!setleave` kèm file.
 ## ⚠️ Lưu ý
 
 - Đây là **phòng thoại của Discord**, không phải Zoom.
-- Bot chỉ phát âm thanh, sau đó **tự động rời** khỏi phòng thoại.
+- Bot **ở lại** trong phòng thoại sau khi phát; gõ `!leave` để gọi bot ra.
 - Nếu nhiều người vào/ra cùng lúc, bot sẽ phát **lần lượt** từng âm thanh.
