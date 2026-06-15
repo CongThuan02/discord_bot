@@ -22,7 +22,22 @@ cp .env.example .env
 
 Cần có **ffmpeg** trên máy (`brew install ffmpeg` trên macOS).
 
-## 3. Chạy
+## 3. Chạy (cách dễ nhất — chỉ cần ấn run)
+
+Tùy hệ điều hành, **double-click** file tương ứng:
+
+| Hệ điều hành | File |
+|--------------|------|
+| Windows | `run.bat` |
+| macOS | `run.command` |
+| Linux | `run.sh` (hoặc chạy `./run.sh` trong terminal) |
+
+Lần đầu chạy, script sẽ **tự cài thư viện**. Nếu chưa có file `.env`, script
+sẽ tự tạo và mở để bạn dán token vào `DISCORD_TOKEN`, lưu lại rồi chạy lại.
+
+> Yêu cầu cài sẵn: **Python 3** và **ffmpeg**. Nếu thiếu, script sẽ báo và hướng dẫn link tải.
+
+### Chạy thủ công (nâng cao)
 
 ```bash
 .venv/bin/python bot.py
